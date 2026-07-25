@@ -1,27 +1,27 @@
-name: Publicar en Binance Square
-
+name: Bot Binance Square
 on:
+  workflow_dispatch:  # Permite iniciarlo manualmente
   schedule:
-    - cron: '* * * * *'
-  workflow_dispatch:
+    - cron: '*/25 * * * *'  # Se revisa cada 25min, respeta tu intervalo
 
 jobs:
-  run-bot:
+  publicar:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # No se queda colgado
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: Configurar Python
+      - name: Instalar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Instalar librerías
         run: pip install requests
 
-      - name: Ejecutar bot
+      - name: Ejecutar el bot
         env:
           BINANCE_KEY: ${{ secrets.BINANCE_KEY }}
-        run: python publicar.py
+        run: python3 publicador.py
         
