@@ -2,10 +2,10 @@ import os
 import requests
 import random
 
-# 1. Obtener precios reales de Binance
+# 1. Obtener datos reales de Binance para BTC y ETH
 try:
-    res_btc = requests.get("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT").json()
-    res_eth = requests.get("https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT").json()
+    res_btc = requests.get("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", timeout=10).json()
+    res_eth = requests.get("https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT", timeout=10).json()
     
     btc_price = float(res_btc['lastPrice'])
     btc_change = float(res_btc['priceChangePercent'])
@@ -13,45 +13,55 @@ try:
     eth_price = float(res_eth['lastPrice'])
     eth_change = float(res_eth['priceChangePercent'])
     
-    btc_trend = "🚀 FUERTE AL ALZA" if btc_change > 1 else ("📈 LIGERAMENTE AL ALZA" if btc_change >= 0 else "📉 A LA BAJA")
-    eth_trend = "🚀 FUERTE AL ALZA" if eth_change > 1 else ("📈 LIGERAMENTE AL ALZA" if eth_change >= 0 else "📉 A LA BAJA")
+    # Análisis detallado de tendencias
+    btc_estado = "🚨 ¡ATENCIÓN TRADERS! Movimiento bajista peligroso detectado" if btc_change < 0 else "🚀 ¡OJO AQUÍ! Presión alcista imparable"
+    eth_estado = "🚨 ¡Se desploma o busca soporte crítico!" if eth_change < 0 else "🔥 ¡Fuerza compradora desatada en este nivel!"
 
-    # Listas de frases creativas y aleatorias para que cada post sea único
-    introducciones = [
-        "🔥 ¡Atención traders! Así se mueve el tablero en este preciso instante:",
-        "📊 Monitoreo rápido de las principales criptomonedas del mercado:",
-        "⚡️ Actualización express de precios y tendencias clave:",
-        "🎯 Nuevos movimientos detectados en el mercado cripto hoy:",
-        "💡 Analizando el pulso actual de Bitcoin y Ethereum:"
-    ]
-    
-    preguntas = [
-        "¿Hará nuevo máximo o veremos un retesteo? 👇",
-        "¿Cuál es tu estrategia para las próximas horas? Dejamela en los comentarios 💭",
-        "¿Estás acumulando o prefieres esperar una corrección? 📉📈",
-        "El mercado no descansa. ¿Qué opinas de este movimiento? 🧠",
-        "Gestión de riesgo siempre por delante. ¿Cómo ves el panorama? 🎯"
+    # 2. Banco de textos largos, llamativos y aleatorios estilo análisis profesional
+    ganchos = [
+        f"⚠️ ¡ESTA MONEDA ESTÁ DANDO DE QUÉ HABLAR! El mercado no perdonas los despistes y la volatilidad actual está liquidando posiciones apalancadas. Analicemos los datos en frío:",
+        f"🔥 ¡ALERTA ROJA EN EL MERCADO CRIPTO! Las ballenas se están moviendo rápido y la acción de precio nos deja un escenario técnico sumamente delicado. Mira esto:",
+        f"📉📈 ¡GIRO INESPERADO EN LAS TENDENCIAS! Si operas sin gestión de riesgo hoy, puedes quedar atrapado. Desglosamos el comportamiento de los activos principales:",
+        f"⚡️ ¡INFORME DE ÚLTIMA HORA EN EL TABLERO! El volumen de transacciones se dispara y los indicadores apuntan a un movimiento decisivo en las próximas horas:"
     ]
 
-    intro_elegida = random.choice(introductions if 'introductions' in locals() else introducciones)
-    pregunta_elegida = random.choice(preguntas)
+    reflexiones = [
+        "💡 Consejo de trader: Nunca operes por emociones. Espera la confirmación de volumen antes de entrar en long o en short. ¿Estás protegido?",
+        "🧠 El sentimiento del mercado cambia en segundos. Las manos débiles venden en pánico mientras los institucionales acumulan. ¿De qué lado estás?",
+        "📊 Recuerda revisar tus niveles de liquidación. Un mercado bajista o alcista extremo requiere paciencia quirúrgica.",
+        "🎯 La paciencia paga más que operar por desesperación. Analiza el gráfico de 4 horas antes de tomar cualquier decisión precipitada."
+    ]
 
+    gancho_elegido = random.choice(ganchos)
+    reflexion_elegida = random.choice(reflexiones)
+
+    # Construcción del mensaje largo, completo y profesional
     mensaje = (
-        f"{intro_elegida}\n\n"
-        f"• $BTC (Bitcoin): ${btc_price:,.2f} USD | Cambio 24h: {btc_change:+.2f}% -> {btc_trend}\n"
-        f"• $ETH (Ethereum): ${eth_price:,.2f} USD | Cambio 24h: {eth_change:+.2f}% -> {eth_trend}\n\n"
-        f"{pregunta_elegida}\n\n"
-        f"#Crypto #BinanceSquare #BTC #ETH #Trading"
+        f"{gancho_elegido}\n\n"
+        f"• Activo 1: $BTC (Bitcoin)\n"
+        f"  - Precio Actual: ${btc_price:,.2f} USD\n"
+        f"  - Rendimiento 24h: {btc_change:+.2f}%\n"
+        f"  - Diagnóstico: {btc_estado}\n\n"
+        f"• Activo 2: $ETH (Ethereum)\n"
+        f"  - Precio Actual: ${eth_price:,.2f} USD\n"
+        f"  - Rendimiento 24h: {eth_change:+.2f}%\n"
+        f"  - Diagnóstico: {eth_estado}\n\n"
+        f"{reflexion_elegida}\n\n"
+        f"👇 ¿Qué opinas de este movimiento? Déjame tu análisis en los comentarios y dime si abres posición a la baja o al alza.\n\n"
+        f"#Crypto #BinanceSquare #BTC #ETH #Trading #AnalisisTecnico"
     )
 
 except Exception as e:
+    # Mensaje de respaldo robusto por si falla la red momentáneamente
     mensaje = (
-        f"⚡️ Monitoreo activo de activos digitales en tiempo real.\n\n"
-        f"Mantén tu enfoque analizando de cerca a $BTC y $ETH. ¡El mercado cambia en segundos! 📊📈\n\n"
-        f"#Crypto #BinanceSquare #BTC #ETH"
+        f"🚨 ¡ALERTA DE MERCADO EN TIEMPO REAL!\n\n"
+        f"El comportamiento de $BTC y $ETH nos muestra una volatilidad extrema. Los traders experimentados saben que este es el momento de máxima cautela y oportunidad.\n\n"
+        f"📊 Mantén el ojo en los soportes claves y no olvides gestionar tu riesgo adecuadamente. El mercado recompensa la disciplina.\n\n"
+        f"¿Hacia dónde crees que romperá el precio hoy? Coméntalo abajo 👇\n\n"
+        f"#Crypto #BinanceSquare #BTC #ETH #Trading"
     )
 
-# 2. Publicar automáticamente en Binance Square
+# 3. Publicar en Binance Square mediante la API
 url = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
 api_key = os.environ.get("BINANCE_KEY")
 
@@ -67,3 +77,4 @@ payload = {
 
 response = requests.post(url, headers=headers, json=payload)
 print("Respuesta de Binance:", response.text)
+
