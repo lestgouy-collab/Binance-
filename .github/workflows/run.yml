@@ -23,5 +23,5 @@ jobs:
       - name: Ejecutar el bot
         env:
           BINANCE_KEY: ${{ secrets.BINANCE_KEY }}
-        run: python3 publicador.py
+        run: python3 bot.py
         
