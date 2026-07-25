@@ -24,3 +24,4 @@ jobs:
         env:
           BINANCE_KEY: ${{ secrets.BINANCE_KEY }}
         run: python publicar.py
+
