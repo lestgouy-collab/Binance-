@@ -23,5 +23,5 @@ jobs:
       - name: Ejecutar bot
         env:
           BINANCE_KEY: ${{ secrets.BINANCE_KEY }}
-        run: python analisis.py
+        run: python bot.py
         
