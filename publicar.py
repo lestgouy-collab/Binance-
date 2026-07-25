@@ -1,56 +1,53 @@
 import os
 import requests
 import random
+import time
 
-# Lista base con tokens orientados a futuros (puedes agregar los que quieras)
-tokens = [
-    ("BTCUSDT", "Bitcoin", "$BTC", 65000.0, 1.2),
-    ("ETHUSDT", "Ethereum", "$ETH", 3500.0, -0.8),
-    ("SOLUSDT", "Solana", "$SOL", 140.0, 3.5),
-    ("BNBUSDT", "Binance Coin", "$BNB", 580.0, 0.5),
-    ("XRPUSDT", "XRP", "$XRP", 0.55, 2.1)
-]
+random.seed(int(time.time()))
 
-t1, t2 = random.sample(tokens, 2)
-
-# Consulta directa al endpoint oficial de FUTUROS de Binance (/fapi/)
+# 1. Obtener una noticia de última hora de la API gratuita de CryptoPanic (o respaldo automático)
 try:
-    r1 = requests.get(f"https://fapi.binance.com/fapi/v1/ticker/24hr?symbol={t1[0]}", timeout=5).json()
-    val1 = float(r1.get('lastPrice', t1[3]))
-    pct1 = float(r1.get('priceChangePercent', t1[4]))
+    url_news = "https://cryptopanic.com/api/v1/posts/?auth_token=free&public=true&kind=news"
+    res_news = requests.get(url_news, timeout=8).json()
+    resultados = res_news.get('results', [])
+    if resultados:
+        noticia_obj = random.choice(resultados[:10]) # Elegir entre las 10 más recientes
+        titular_noticia = noticia_obj.get('title', 'Actualidad relevante en el mercado cripto')
+        fuente_noticia = noticia_obj.get('source', {}).get('title', 'Crypto Market')
+    else:
+        titular_noticia = "Alta volatilidad y movimientos clave sacuden el mercado de derivados."
+        fuente_noticia = "Binance Feed"
 except:
-    val1, pct1 = t1[3], t1[4]
+    titular_noticia = "Actualización en tiempo real sobre el flujo de capital en criptomonedas."
+    fuente_noticia = "Mercado Global"
 
+# 2. Obtener 2 criptomonedas al azar del mercado de futuros de Binance en tiempo real
 try:
-    r2 = requests.get(f"https://fapi.binance.com/fapi/v1/ticker/24hr?symbol={t2[0]}", timeout=5).json()
-    val2 = float(r2.get('lastPrice', t2[3]))
-    pct2 = float(r2.get('priceChangePercent', t2[4]))
+    url_fapi = "https://fapi.binance.com/fapi/v1/ticker/24hr"
+    response = requests.get(url_fapi, timeout=8).json()
+    pares_usdt = [item for item in response if item['symbol'].endswith('USDT') and '_' not in item['symbol']]
+    
+    s = random.sample(pares_usdt, 2)
+    t1_nom, val1, pct1 = s[0]['symbol'].replace('USDT', ''), float(s[0]['lastPrice']), float(s[0]['priceChangePercent'])
+    t2_nom, val2, pct2 = s[1]['symbol'].replace('USDT', ''), float(s[1]['lastPrice']), float(s[1]['priceChangePercent'])
 except:
-    val2, pct2 = t2[3], t2[4]
+    t1_nom, val1, pct1 = "BTC", 65000.0, 1.2
+    t2_nom, val2, pct2 = "ETH", 3500.0, -0.5
 
-# Formatos de texto dinámicos y variados enfocados en derivados
-opciones = [
-    (
-        f"📊 [INFORME FLASH DE FUTUROS]\n\n"
-        f"Movimientos clave detectados en el mercado de derivados:\n"
-        f"• {t1[1]} ({t1[2]}): ${val1:,.4f} ({pct1:+.2f}%)\n"
-        f"• {t2[1]} ({t2[2]}): ${val2:,.4f} ({pct2:+.2f}%)\n\n"
-        f"¿Cuál de estos dos activos liderará el próximo impulso con apalancamiento? Coméntalo 🚀\n\n"
-        f"#BinanceSquare #CryptoFutures #Trading {t1[2]} {t2[2]}"
-    ),
-    (
-        f"💡 [RADAR DE OPORTUNIDADES - DERIVADOS]\n\n"
-        f"Analizando la fuerza de tendencia en temporalidad corta:\n"
-        f"- {t1[2]} cotiza en ${val1:,.4f} con una variación de {pct1:+.2f}%\n"
-        f"- {t2[2]} se posiciona en ${val2:,.4f} con un cambio de {pct2:+.2f}%\n\n"
-        f"Mantén tu gestión de riesgo clara y opera con responsabilidad. ¿Posicionado en long o short? 📈\n\n"
-        f"#BinanceSquare #Futures #MercadoCripto {t1[2]} {t2[2]}"
-    )
-]
+# 3. Estructura que integra la noticia real con los datos de futuros en vivo
+mensaje_final = (
+    f"📰 [NOTICIA DE ÚLTIMA HORA]\n"
+    f"Fuente: {fuente_noticia}\n\n"
+    f"\"{titular_noticia}\"\n\n"
+    f"📊 Impacto en derivados:\n"
+    f"• ${t1_nom}: ${val1:,.4f} ({pct1:+.2f}%)\n"
+    f"• ${t2_nom}: ${val2:,.4f} ({pct2:+.2f}%)\n\n"
+    f"¿Cómo afectará esto a tus posiciones en futuros? Déjanos tu opinión 👇\n\n"
+    f"#BinanceSquare #CryptoNews #Trading #${t1_nom} #${t2_nom}"
+)
 
-mensaje_final = random.choice(opciones)
-
-url = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
+# Envío oficial a la API de Binance Square
+url_binance = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
 api_key = os.environ.get("BINANCE_KEY")
 
 headers = {
@@ -63,6 +60,5 @@ payload = {
     "bodyTextOnly": mensaje_final
 }
 
-respuesta = requests.post(url, headers=headers, json=payload)
+respuesta = requests.post(url_binance, headers=headers, json=payload)
 print("Respuesta de Binance:", respuesta.text)
-
