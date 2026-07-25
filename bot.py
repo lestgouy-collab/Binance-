@@ -1,78 +1,82 @@
 import os
 import requests
 import random
+import time
+import xml.etree.ElementTree as ET
 
-tokens = [
-    ("BTCUSDT", "Bitcoin", "$BTC", 65000.0, 1.2),
-    ("ETHUSDT", "Ethereum", "$ETH", 3500.0, -0.8),
-    ("SOLUSDT", "Solana", "$SOL", 140.0, 3.5),
-    ("BNBUSDT", "Binance Coin", "$BNB", 580.0, 0.5),
-    ("XRPUSDT", "XRP", "$XRP", 0.55, 2.1),
-    ("ADAUSDT", "Cardano", "$ADA", 0.45, -1.0),
-    ("DOGEUSDT", "Dogecoin", "$DOGE", 0.12, 4.2),
-    ("AVAXUSDT", "Avalanche", "$AVAX", 25.0, 1.8),
-    ("DOTUSDT", "Polkadot", "$DOT", 6.5, -0.3),
-    ("LINKUSDT", "Chainlink", "$LINK", 14.2, 2.7)
-]
+BINANCE_API_KEY = os.environ.get("BINANCE_KEY")
+# ⏱️ INTERVALO CONFIGURADO: 15 MINUTOS
+INTERVALO_PUBLICACION = 15
 
-t1, t2 = random.sample(tokens, 2)
+# Solo pares de FUTUROS PERPETUOS
+def obtener_mercado():
+    try:
+        res = requests.get("https://fapi.binance.com/fapi/v1/ticker/24hr", timeout=5).json()
+        pares = [p for p in res if p["symbol"].endswith("USDT") and "_" not in p["symbol"]]
+        seleccion = random.sample(pares, 2)
+        datos = []
+        for p in seleccion:
+            moneda = p["symbol"].replace("USDT","")
+            precio = float(p["lastPrice"])
+            cambio = float(p["priceChangePercent"])
+            tendencia = "📈 **SE ESPERA SUBIDA**" if cambio > 0 else "📉 **SE ESPERA BAJADA**"
+            datos.append( (moneda, precio, cambio, tendencia) )
+        return datos
+    except:
+        return [
+            ("BTC", 78500, 2.8, "📈 **SE ESPERA SUBIDA**"),
+            ("ETH", 2380, -1.5, "📉 **SE ESPERA BAJADA**")
+        ]
 
-# Intentamos obtener datos reales de Binance de forma segura
-try:
-    r1 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={t1[0]}", timeout=5).json()
-    val1 = float(r1.get('lastPrice', t1[3]))
-    pct1 = float(r1.get('priceChangePercent', t1[4]))
-except:
-    val1, pct1 = t1[3], t1[4]
+# Noticias reales en español
+def obtener_noticias():
+    titulares = []
+    try:
+        res = requests.get("https://es.cointelegraph.com/rss", timeout=5)
+        if res.status_code == 200:
+            raiz = ET.fromstring(res.content)
+            for item in raiz.findall(".//item"):
+                t = item.find("title")
+                if t is not None and t.text:
+                    titulares.append(t.text.strip())
+    except:
+        pass
+    return titulares if titulares else [
+        "La volatilidad define el rumbo de los futuros hoy.",
+        "Datos macroeconómicos mueven los contratos perpetuos.",
+        "Liquidaciones masivas marcan la tendencia del mercado."
+    ]
 
-try:
-    r2 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={t2[0]}", timeout=5).json()
-    val2 = float(r2.get('lastPrice', t2[3]))
-    pct2 = float(r2.get('priceChangePercent', t2[4]))
-except:
-    val2, pct2 = t2[3], t2[4]
+def publicar(texto):
+    url = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
+    resp = requests.post(url, headers={
+        "X-Square-OpenAPI-Key": BINANCE_API_KEY,
+        "Content-Type": "application/json"
+    }, json={"bodyTextOnly": texto}, timeout=10)
+    print(f"📤 {resp.status_code} | {resp.text[:150]}")
+    return resp.json().get("code") == "000000"
 
-textos_generados = [
-    (
-        f"🎯 [SEÑAL DE TRADING EN VIVO]\n\n"
-        f"El movimiento actual de los activos digitales exige atención milimétrica:\n"
-        f"🔹 {t1[2]} ({t1[1]}): ${val1:,.4f} | Cambio: {pct1:+.2f}%\n"
-        f"🔹 {t2[2]} ({t2[1]}): ${val2:,.4f} | Cambio: {pct2:+.2f}%\n\n"
-        f"¿Estás operando en corto o esperas un rebote? Déjamelo saber en los comentarios 👇\n\n"
-        f"#Crypto #BinanceSquare {t1[2]} {t2[2]} #Trading"
-    ),
-    (
-        f"🔥 [INFORME TÉCNICO DE ÚLTIMA HORA]\n\n"
-        f"Analizando el comportamiento de las principales altcoins en este bloque:\n"
-        f"• {t1[2]} marca ${val1:,.4f} con un rendimiento del {pct1:+.2f}%\n"
-        f"• {t2[2]} se sitúa en ${val2:,.4f} variando un {pct2:+.2f}%\n\n"
-        f"La gestión de riesgo es clave en estos niveles de volatilidad. ¿Cómo va tu cartera hoy? 🧠💰\n\n"
-        f"#Crypto #BinanceSquare {t1[2]} {t2[2]} #Altcoins"
-    ),
-    (
-        f"⚡️ [MONITOREO DE MERCADO]\n\n"
-        f"Nuevos datos revelados en el gráfico de 1H para:\n"
-        f"1️⃣ {t1[1]} ({t1[2]}): ${val1:,.4f} ({pct1:+.2f}%)\n"
-        f"2️⃣ {t2[1]} ({t2[2]}): ${val2:,.4f} ({pct2:+.2f}%)\n\n"
-        f"¿Hacia dónde crees que se inclinará la balanza hoy? ¡Te leo abajo! 📊\n\n"
-        f"#Crypto #BinanceSquare {t1[2]} {t2[2]} #Analisis"
-    )
-]
+if __name__ == "__main__":
+    print("✅ BOT LISTO: 15min entre cada publicación | Límite ~96/día")
+    while True:
+        titular = random.choice(obtener_noticias())
+        m1, p1, c1, t1 = obtener_mercado()[0]
+        m2, p2, c2, t2 = obtener_mercado()[1]
 
-publicacion_final = random.choice(textos_generados)
+        mensaje = (
+            f"🔥 **ALERTA FUTUROS | {time.strftime('%d/%m · %H:%M')}**\n\n"
+            f"📰 NOTICIA CLAVE:\n{titular}\n\n"
+            f"⚡ PREDICCIÓN Y DATOS:\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"🔸 ${m1}: ${p1:,.4f} ({c1:+.2f}%)\n{t1}\n"
+            f"🔸 ${m2}: ${p2:,.4f} ({c2:+.2f}%)\n{t2}\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"¿Coincidís con la tendencia? ¿Vas largo o corto? 👇\n\n"
+            f"#FuturosPerpetuos #Binance #Trading #{m1} #{m2}"
+        )
 
-url = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
-api_key = os.environ.get("BINANCE_KEY")
-
-headers = {
-    "X-Square-OpenAPI-Key": api_key,
-    "Content-Type": "application/json",
-    "clienttype": "binanceSkill"
-}
-
-payload = {
-    "bodyTextOnly": publicacion_final
-}
-
-respuesta = requests.post(url, headers=headers, json=payload)
-print("Respuesta de Binance:", respuesta.text)
+        ok = publicar(mensaje)
+        print(f"✅ PUBLICADO" if ok else "❌ FALLÓ")
+        print(f"⏳ Siguiente en {INTERVALO_PUBLICACION} minutos...\n")
+        time.sleep(INTERVALO_PUBLICACION * 60)
+        
