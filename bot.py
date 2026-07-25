@@ -2,8 +2,8 @@ import os
 import requests
 import random
 
-# Lista masiva de criptomonedas para alternar al azar
-criptos_disponibles = [
+# Lista masiva de pares de criptomonedas
+criptos_pool = [
     ("BTCUSDT", "Bitcoin", "$BTC"),
     ("ETHUSDT", "Ethereum", "$ETH"),
     ("SOLUSDT", "Solana", "$SOL"),
@@ -16,87 +16,69 @@ criptos_disponibles = [
     ("LINKUSDT", "Chainlink", "$LINK")
 ]
 
-try:
-    # Seleccionar 2 criptomonedas al azar
-    seleccionadas = random.sample(criptos_disponibles, 2)
-    c1_symbol, c1_name, c1_tag = seleccionadas[0]
-    c2_symbol, c2_name, c2_tag = seleccionadas[1]
-
-    # Consultar datos en tiempo real con timeout controlado
-    res1 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={c1_symbol}", timeout=15).json()
-    res2 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={c2_symbol}", timeout=15).json()
-    
-    p1 = float(res1['lastPrice'])
-    ch1 = float(res1['priceChangePercent'])
-    
-    p2 = float(res2['lastPrice'])
-    ch2 = float(res2['priceChangePercent'])
-    
-    estado1 = "EN TENDENCIA ALCISTA 📈" if ch1 >= 0 else "ZONA DE SOPORTE / BAJISTA 📉"
-    estado2 = "EN TENDENCIA ALCISTA 📈" if ch2 >= 0 else "ZONA DE SOPORTE / BAJISTA 📉"
-
-    # Bancos masivos de títulos completamente diferentes y llamativos
-    titulares = [
-        "⚡️ [RADAR CRIPTO] Movimientos clave en vivo:",
-        "🔥 [INFORME EXCLUSIVO] Análisis de volatilidad instantánea:",
-        "🎯 [ALERTA DE TRADING] ¿Qué están haciendo estas altcoins?:",
-        "📊 [SEGUIMIENTO EN TIEMPO REAL] Radiografía del mercado actual:",
-        "💡 [actualización RÁPIDA] Oportunidades detectadas en el gráfico:"
-    ]
-
-    # Estilos de redacción y formatos de texto variados para los cuerpos del análisis
-    cuerpos = [
-        (
-            f"• Activo analizado -> {c1_tag}: ${p1:,.4f} USD (Variación 24h: {ch1:+.2f}% | {estado1})\n"
-            f"• Activo analizado -> {c2_tag}: ${p2:,.4f} USD (Variación 24h: {ch2:+.2f}% | {estado2})\n\n"
-            f"El comportamiento del order book muestra actividad interesante. ¿Operas en corto o en largo hoy?"
-        ),
-        (
-            f"📉 Reporte técnico express:\n"
-            f"1. {c1_tag} marca un precio de ${p1:,.4f} ({ch1:+.2f}%). Condición: {estado1}\n"
-            f"2. {c2_tag} se sitúa en ${p2:,.4f} ({ch2:+.2f}%). Condición: {estado2}\n\n"
-            f"Las manos institucionales se mueven con cautela. ¿Cuál es tu plan de acción?"
-        ),
-        (
-            f"⚠️ Actualización de última hora:\n"
-            f"• {c1_tag} -> ${p1:,.4f} | Cambio: {ch1:+.2f}%\n"
-            f"• {c2_tag} -> ${p2:,.4f} | Cambio: {ch2:+.2f}%\n\n"
-            f"La presión compradora y vendedora está disputándose este nivel clave. ¿Hacia dónde romperá?"
-        )
-    ]
-
-    cierres = [
-        "Déjame tu lectura del mercado en los comentarios y sígueme para más análisis diarios 🚀",
-        "La gestión de riesgo es la clave del éxito. ¿Estás dentro o fuera de esta jugada? 🧠",
-        "Comparte tu estrategia y recuerda asegurar beneficios en cada operación 💰",
-        "¿Ves un rebote inminente o una corrección mayor? Te leo abajo 👇"
-    ]
-
-    mensaje = (
-        f"{random.choice(titulares)}\n\n"
-        f"{random.choice(cuerpos)}\n\n"
-        f"{random.choice(cierres)}\n\n"
-        f"#Crypto #BinanceSquare {c1_tag} {c2_tag} #Trading #Analisis"
+# Banco gigante de noticias y ganchos de mercado aleatorios e independientes
+banco_noticias = [
+    lambda c1, c2, p1, ch1, p2, ch2: (
+        f"🚨 ¡IMPACTO EN EL ORDER BOOK! Se detectan liquidaciones masivas en los principales exchanges.\n\n"
+        f"• {c1[2]} ({c1[1]}): ${p1:,.2f} ({ch1:+.2f}%)\n"
+        f"• {c2[2]} ({c2[1]}): ${p2:,.2f} ({ch2:+.2f}%)\n\n"
+        f"¿Las ballenas están manipulando el precio o es una sana corrección? Coméntame tu lectura abajo 👇\n\n"
+        f"#Crypto #BinanceSquare {c1[2]} {c2[2]} #BreakingNews #Trading"
+    ),
+    lambda c1, c2, p1, ch1, p2, ch2: (
+        f"⚡️ ¡NOTICIA DE ÚLTIMA HORA! El volumen institucional se dispara repentinamente en el gráfico de 1H.\n\n"
+        f"📊 Niveles actuales:\n"
+        f"- {c1[2]}: ${p1:,.2f} | Variación: {ch1:+.2f}%\n"
+        f"- {c2[2]}: ${p2:,.2f} | Variación: {ch2:+.2f}%\n\n"
+        f"La volatilidad está al límite. ¿Estás operando en LONG o prefieres esperar en CASH? 🧠💰\n\n"
+        f"#Crypto #BinanceSquare {c1[2]} {c2[2]} #Altcoins"
+    ),
+    lambda c1, c2, p1, ch1, p2, ch2: (
+        f"🔥 ¡RUMBO CRÍTICO! Analistas reportan acumulación inusual en el ecosistema cripto hoy.\n\n"
+        f"🔍 Comportamiento en vivo:\n"
+        f"1️⃣ {c1[2]} ({c1[1]}): ${p1:,.2f} -> {ch1:+.2f}%\n"
+        f"2️⃣ {c2[2]} ({c2[1]}): ${p2:,.2f} -> {ch2:+.2f}%\n\n"
+        f"¿Crees que rompemos resistencia o nos vamos directo al soporte inferior? ¡Te leo! 📉📈\n\n"
+        f"#Crypto #BinanceSquare {c1[2]} {c2[2]} #Analisis"
+    ),
+    lambda c1, c2, p1, ch1, p2, ch2: (
+        f"🎯 ¡RADAR DE MERCADO ACTIVO! El sentimiento de los inversores cambia drásticamente en este bloque horario.\n\n"
+        f"• Estado de {c1[2]}: ${p1:,.2f} ({ch1:+.2f}%)\n"
+        f"• Estado de {c2[2]}: ${p2:,.2f} ({ch2:+.2f}%)\n\n"
+        f"La paciencia paga más que operar por impulso. ¿Cómo va tu cartera hoy? 🚀\n\n"
+        f"#Crypto #BinanceSquare {c1[2]} {c2[2]} #Trading"
     )
+]
+
+try:
+    # Seleccionar 2 criptomonedas distintas al azar
+    c1, c2 = random.sample(criptos_pool, 2)
+
+    # Consultar precios reales con un tiempo de espera amplio para evitar fallos
+    r1 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={c1[0]}", timeout=15).json()
+    r2 = requests.get(f"https://api.binance.com/api/v3/ticker/24hr?symbol={c2[0]}", timeout=15).json()
+    
+    p1 = float(r1['lastPrice'])
+    ch1 = float(r1['priceChangePercent'])
+    
+    p2 = float(r2['lastPrice'])
+    ch2 = float(r2['priceChangePercent'])
+
+    # Elegir una noticia/estructura completamente aleatoria del banco de noticias
+    plantilla_noticia = random.choice(banco_noticias)
+    mensaje = plantilla_noticia(c1, c2, p1, ch1, p2, ch2)
 
 except Exception as e:
-    # Bloque de respaldo alternativo totalmente randomizado para evitar repetición idéntica
-    alt_lista = [
-        ("SOLUSDT", "Solana", "$SOL"), 
-        ("ADAUSDT", "Cardano", "$ADA"), 
-        ("XRPUSDT", "XRP", "$XRP"), 
-        ("DOGEUSDT", "Dogecoin", "$DOGE")
-    ]
-    m_bk = random.choice(alt_lista)
-    
+    # Respaldo dinámico alternativo por si ocurre un fallo de red puntual
+    x1, x2 = random.sample(criptos_pool, 2)
     mensaje = (
-        f"⚡️ [MONITOREO DE ACTIVOS]\n\n"
-        f"El token {m_bk[2]} ({m_bk[1]}) registra movimientos interesantes en temporalidades de corto plazo. Los traders atentos están vigilando los puntos de entrada.\n\n"
-        f"¿Qué opinas de la dirección actual del precio? Comenta abajo 👇\n\n"
-        f"#Crypto #BinanceSquare {m_bk[2]} #Trading"
+        f"📊 ¡BOLETÍN FLASH DE MERCADO!\n\n"
+        f"Nuevos movimientos detectados en {x1[2]} y {x2[2]}. El mapa de calor de Binance muestra cambios interesantes en la fuerza compradora.\n\n"
+        f"Mantén tu estrategia clara y protege tus posiciones. ¿Hacia dónde ves el mercado? 👇\n\n"
+        f"#Crypto #BinanceSquare {x1[2]} {x2[2]} #Trading"
     )
 
-# 3. Enviar a la API de Binance Square
+# 3. Publicar automáticamente en Binance Square
 url = "https://www.binance.com/bapi/composite/v1/public/pgc/openApi/content/add"
 api_key = os.environ.get("BINANCE_KEY")
 
