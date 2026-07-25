@@ -1,0 +1,27 @@
+name: Publicar en Binance Square
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar librerías
+        run: pip install requests
+
+      - name: Ejecutar bot
+        env:
+          BINANCE_KEY: ${{ secrets.BINANCE_KEY }}
+        run: python bot.py
+        
