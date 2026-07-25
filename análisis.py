@@ -2,7 +2,6 @@ import os
 import requests
 import random
 
-# Lista de criptomonedas y formatos variados
 tokens = [
     ("BTCUSDT", "Bitcoin", "$BTC"),
     ("ETHUSDT", "Ethereum", "$ETH"),
@@ -27,7 +26,6 @@ pct1 = float(res_1['priceChangePercent'])
 val2 = float(res_2['lastPrice'])
 pct2 = float(res_2['priceChangePercent'])
 
-# Frases de contenido único y dinámico
 textos_generados = [
     (
         f"🎯 [SEÑAL DE TRADING EN VIVO]\n\n"
@@ -72,4 +70,3 @@ payload = {
 
 respuesta = requests.post(url, headers=headers, json=payload)
 print("Respuesta:", respuesta.text)
-
